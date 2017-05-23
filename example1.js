@@ -23,21 +23,37 @@ function processResponse(err, response) {
     return;
   }
 
+  var endConversation = false;
+
+  // Check for action flags
+  if (response.output.action === 'display_time') {
+    // User asked what time it is, so we display current time
+    console.log('the current time is ' + new Date().toLocaleTimeString());
+  } else if (response.output.action === 'end_conversation') {
+    // User said goodbye, so we're done
+    console.log(response.output.text[0]);
+    endConversation = true;
+  } else {
+    // Display the output dialog, if any
+    if (response.output.text.length != 0) {
+      console.log(response.output.text[0]);
+    }
+  }
+
+  /*
   // If an Intent was detected, log it to the console.
   if (response.intents.length > 0) {
     console.log('Detected intent: #' + response.intents[0].intent);
   }
+  */
 
-  // Display the output from dialog, if any.
-  if (response.output.text.length != 0) {
-      console.log(response.output.text[0]);
+  // If we aren't done, prompt user for the next round of input.
+  if (!endConversation) {
+    var newMessageFromUser = prompt('>> ');
+      // Send back the context to maintain state
+      conversation.message({
+        input: { text: newMessageFromUser },
+        context: response.context
+      }, processResponse)
   }
-
-  // Prompt the user for the next round of input.
-  var newMessageFromUser = prompt('>> ');
-  // Send back the context to maintain state
-  conversation.message({
-    input: { text: newMessageFromUser },
-    context: response.context
-  }, processResponse)
 }
